@@ -1,4 +1,4 @@
-import type { Message, Task, Part } from "@a2a-js/sdk";
+import type { Part } from "@a2a-js/sdk";
 import { RequestContext } from "@a2a-js/sdk/server";
 import type { AgentContext } from "./types.js";
 
@@ -9,16 +9,6 @@ export class AgentContextImpl
   extends RequestContext
   implements AgentContext
 {
-  constructor(
-    userMessage: Message,
-    taskId: string,
-    contextId: string,
-    task?: Task,
-    referenceTasks?: Task[],
-  ) {
-    super(userMessage, taskId, contextId, task, referenceTasks);
-  }
-
   /**
    * Access the raw message parts.
    */

@@ -1,12 +1,10 @@
 import type {
-  AgentCard,
   AgentCapabilities,
   AgentSkill,
   Part,
 } from "@a2a-js/sdk";
 import type {
   RequestContext,
-  ExecutionEventBus,
   TaskStore,
 } from "@a2a-js/sdk/server";
 import type { AletheiaLogger, AletheiaLogLevel } from "../types/index.js";

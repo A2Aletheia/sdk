@@ -35,10 +35,12 @@
     "ai-agents"
   ],
   "author": "",
-  "license": "MIT",
+  "license": "AGPL-3.0-only",
+  "homepage": "https://github.com/A2Aletheia/sdk",
+  "bugs": "https://github.com/A2Aletheia/sdk/issues",
   "repository": {
     "type": "git",
-    "url": "https://github.com/weedeej/aletheia"
+    "url": "https://github.com/A2Aletheia/sdk"
   },
   "dependencies": {
     "@a2a-js/sdk": "^0.2.5",
@@ -48,10 +50,13 @@
     "zod": "^3.24.0"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.2",
     "@types/express": "^4.17.21",
-    "rimraf": "^6.0.1",
     "@types/node": "^20",
+    "eslint": "^9.39.2",
+    "rimraf": "^6.0.1",
     "typescript": "^5.9.2",
+    "typescript-eslint": "^8.55.0",
     "vitest": "^2.1.0"
   },
   "peerDependencies": {
