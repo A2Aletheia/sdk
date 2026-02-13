@@ -85,6 +85,8 @@ export const AgentManifestSchema = z.object({
       // Registry info
       registryChain: z.string().optional(),
       registryAddress: z.string().optional(),
+      // ERC-8004 token ID (uint256 as string) — links agent to on-chain NFT identity
+      tokenId: z.string().regex(/^\d+$/, "Must be a uint256 string").optional(),
       livenessPingUrl: z.string().url().optional(),
     })
     .optional(),

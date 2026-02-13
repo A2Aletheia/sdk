@@ -104,6 +104,21 @@ export class AletheiaClient {
     });
   }
 
+  /**
+   * Link an ERC-8004 token to an existing agent.
+   * Requires authentication (call `setAuthToken` first).
+   */
+  async linkErc8004Token(
+    did: DID,
+    tokenId: string,
+    registryAddress: string,
+  ): Promise<Agent> {
+    return this.http.put<Agent>(
+      `/api/agents/${encodeURIComponent(did)}/erc8004`,
+      { tokenId, registryAddress },
+    );
+  }
+
   async getAgent(did: DID): Promise<Agent> {
     return this.http.get<Agent>(`/api/agents/${encodeURIComponent(did)}`);
   }

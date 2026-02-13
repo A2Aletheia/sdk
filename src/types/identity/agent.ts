@@ -28,6 +28,7 @@ export const AgentSchema = z.object({
   chainId: z.number().int().optional(),
   registryTxHash: z.string().optional(),
   ownerAddress: z.string().optional(),
+  erc8004TokenId: z.string().optional(),
 });
 export type Agent = z.infer<typeof AgentSchema>;
 
