@@ -444,4 +444,4 @@ See the [`@a2aletheia/a2a` README](https://www.npmjs.com/package/@a2aletheia/a2a
 
 ## License
 
-AGPL-3.0-only
+Licensed under [MIT License](LICENSE)
