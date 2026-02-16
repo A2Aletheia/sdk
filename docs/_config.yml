@@ -1,0 +1,44 @@
+title: "@a2aletheia/sdk Documentation"
+description: "SDK for integrating with the Aletheia A2A Agent Discovery Registry"
+baseurl: "/sdk"
+url: "https://a2aletheia.github.io"
+
+remote_theme: just-the-docs/just-the-docs
+
+plugins:
+  - jekyll-remote-theme
+
+markdown: kramdown
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+
+search_enabled: true
+
+nav_enabled: true
+
+collections:
+  guides:
+    permalink: /:collection/:path/
+    output: true
+  api:
+    permalink: /:collection/:path/
+    output: true
+
+defaults:
+  - scope:
+      path: ""
+      type: "guides"
+    values:
+      layout: "default"
+  - scope:
+      path: ""
+      type: "api"
+    values:
+      layout: "default"
+
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor
