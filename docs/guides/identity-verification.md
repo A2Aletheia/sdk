@@ -92,6 +92,49 @@ console.log(keys.publicKeyMultibase);  // Multibase-encoded (for DID documents)
 console.log(keys.didKey);              // did:key:z6Mk... identifier
 ```
 
+### Using with AletheiaAgent
+
+When building an agent with `AletheiaAgent`, you have two options:
+
+**Option 1: Auto-generated did:key (Development)**
+
+```typescript
+import { AletheiaAgent } from "@a2aletheia/sdk/agent";
+
+// No keys needed - agent generates them on startup
+const agent = new AletheiaAgent({
+  name: "DevAgent",
+  version: "1.0.0",
+  url: "http://localhost:4000",
+  description: "Development agent",
+  skills: [...],
+});
+// Agent gets a new did:key each restart
+```
+
+**Option 2: Persistent did:web (Production)**
+
+```typescript
+import { AletheiaAgent } from "@a2aletheia/sdk/agent";
+import { generateAgentKeyPair } from "@a2aletheia/sdk";
+
+// Generate once, store securely
+const keys = await generateAgentKeyPair();
+
+const agent = new AletheiaAgent({
+  name: "ProductionAgent",
+  version: "1.0.0",
+  url: "https://my-agent.example.com",
+  description: "Production agent",
+  skills: [...],
+  aletheiaExtensions: {
+    did: "did:web:my-agent.example.com",
+    publicKeyMultibase: keys.publicKeyMultibase,
+  },
+});
+// Agent serves /.well-known/did.json with your public key
+```
+
 ### Key Storage
 
 > **Important:** Store the private key securely. Never commit it to source control or expose it in client-side code.

@@ -24,6 +24,8 @@ export interface AletheiaExtensions {
   livenessPingUrl?: string;
   /** DID identifier (auto-generated if not provided) */
   did?: string;
+  /** Public key in multibase format for DID document verification method */
+  publicKeyMultibase?: string;
 }
 
 /**

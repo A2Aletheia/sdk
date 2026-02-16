@@ -171,9 +171,9 @@ export class AletheiaAgent {
     const a2aApp = new A2AExpressApp(this.requestHandler);
     a2aApp.setupRoutes(app);
 
-    // Serve /.well-known/did.json for did:web resolution
+    // Serve /.well-known/did.json for any DID (did:web or did:key)
     const did = this.config.aletheiaExtensions?.did;
-    if (did?.startsWith("did:web:")) {
+    if (did) {
       app.get("/.well-known/did.json", (_req, res) => {
         res.json(this.buildDIDDocument(did));
       });
@@ -279,6 +279,8 @@ export class AletheiaAgent {
         ext.owner = config.aletheiaExtensions.owner;
       if (config.aletheiaExtensions.livenessPingUrl)
         ext.livenessPingUrl = config.aletheiaExtensions.livenessPingUrl;
+      if (config.aletheiaExtensions.publicKeyMultibase)
+        ext.publicKeyMultibase = config.aletheiaExtensions.publicKeyMultibase;
 
       (card as unknown as Record<string, unknown>).aletheiaExtensions = ext;
     }
@@ -297,10 +299,13 @@ export class AletheiaAgent {
    * Build a minimal W3C DID Document for did:web self-hosting.
    */
   private buildDIDDocument(did: string) {
-    return {
+    const publicKeyMultibase = this.config.aletheiaExtensions?.publicKeyMultibase;
+    const verificationMethodId = `${did}#${publicKeyMultibase ?? "key-1"}`;
+    
+    const doc: Record<string, unknown> = {
       "@context": [
         "https://www.w3.org/ns/did/v1",
-        "https://w3id.org/security/suites/ed25519-2020/v1",
+        "https://w3id.org/security/multikey/v1",
       ],
       id: did,
       controller: did,
@@ -312,5 +317,20 @@ export class AletheiaAgent {
         },
       ],
     };
+    
+    if (publicKeyMultibase) {
+      doc.verificationMethod = [
+        {
+          id: verificationMethodId,
+          type: "Multikey",
+          controller: did,
+          publicKeyMultibase,
+        },
+      ];
+      doc.authentication = [verificationMethodId];
+      doc.assertionMethod = [verificationMethodId];
+    }
+    
+    return doc;
   }
 }

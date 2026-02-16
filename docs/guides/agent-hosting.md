@@ -102,6 +102,81 @@ const agent = new AletheiaAgent({
 
 ---
 
+## DID Configuration
+
+The agent supports two DID methods for identity:
+
+| Method | Use Case | Setup |
+|--------|----------|-------|
+| `did:key` | Development, testing | Auto-generated, no configuration needed |
+| `did:web` | Production | Requires hosting `did.json` at your domain |
+
+### Auto-generated did:key (Default)
+
+When no `aletheiaExtensions.did` is provided, the agent will:
+1. Generate Ed25519 key pair on startup
+2. Create a `did:key` from the public key
+3. Serve `/.well-known/did.json` automatically
+
+```typescript
+// No DID configuration needed - auto-generates did:key
+const agent = new AletheiaAgent({
+  name: "DevAgent",
+  version: "1.0.0",
+  url: "http://localhost:4000",
+  description: "Development agent",
+  skills: [...],
+});
+```
+
+### did:web for Production
+
+For production deployments, use `did:web` to establish a stable, verifiable identity:
+
+```typescript
+import { generateAgentKeyPair } from "@a2aletheia/sdk";
+
+// 1. Generate keys (run once, store securely!)
+const keys = await generateAgentKeyPair();
+console.log("Private Key:", keys.privateKey);           // Store in secure vault!
+console.log("Public Key Multibase:", keys.publicKeyMultibase);
+console.log("DID:", keys.didKey);
+
+// 2. Configure agent with did:web
+const agent = new AletheiaAgent({
+  name: "ProductionAgent",
+  version: "1.0.0",
+  url: "https://my-agent.example.com",
+  description: "Production agent with stable identity",
+  skills: [...],
+  aletheiaExtensions: {
+    did: "did:web:my-agent.example.com",
+    publicKeyMultibase: keys.publicKeyMultibase,
+    owner: "0x1234...",  // Optional: Ethereum address for SIWE auth
+  },
+});
+```
+
+The SDK automatically serves `/.well-known/did.json` containing:
+- Verification method with your Ed25519 public key
+- Authentication and assertion method references
+- Agent service endpoint pointing to your URL
+
+### Migration Path
+
+To migrate from `did:key` to `did:web` without code changes:
+
+1. **Generate keys**: `await generateAgentKeyPair()`
+2. **Update config**: Set `did: "did:web:yourdomain.com"` and `publicKeyMultibase`
+3. **No other changes needed** - SDK handles everything
+
+```bash
+# Generate keys via CLI
+node -e "import('@a2aletheia/sdk').then(({generateAgentKeyPair}) => generateAgentKeyPair().then(k => console.log(JSON.stringify(k, null, 2))))"
+```
+
+---
+
 ## Handling Messages
 
 ### Simple Text Response

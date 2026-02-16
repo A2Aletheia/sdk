@@ -448,11 +448,28 @@ Aletheia-specific extensions for AgentCard metadata.
 
 ```typescript
 interface AletheiaExtensions {
-  owner?: string;           // Ethereum address of owner (for SIWE auth)
-  livenessPingUrl?: string; // URL for liveness health checks
-  did?: string;             // DID identifier (did:web or did:key)
+  owner?: string;              // Ethereum address of owner (for SIWE auth)
+  livenessPingUrl?: string;    // URL for liveness health checks
+  did?: string;                // DID identifier (did:web or did:key)
+  publicKeyMultibase?: string; // Public key in multibase format (for did:web)
 }
 ```
+
+**Fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `owner` | `string` | Ethereum address of the agent owner (for SIWE authentication) |
+| `livenessPingUrl` | `string` | URL for Aletheia liveness health checks |
+| `did` | `string` | DID identifier. Use `did:web:yourdomain.com` for production or leave unset for auto-generated `did:key` |
+| `publicKeyMultibase` | `string` | Ed25519 public key in multibase format (e.g., `z6Mk...`). Required for `did:web`, auto-derived for `did:key` |
+
+**DID Methods:**
+
+| Method | When to Use | `publicKeyMultibase` |
+|--------|-------------|---------------------|
+| `did:key` (auto) | Development, testing | Optional - auto-derived |
+| `did:web` | Production | Required - from `generateAgentKeyPair()` |
 
 ---
 
