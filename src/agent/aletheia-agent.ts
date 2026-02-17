@@ -167,6 +167,12 @@ export class AletheiaAgent {
     const express = (await import("express")).default;
     const app = express();
 
+    // Log all incoming requests
+    app.use((req, res, next) => {
+      this.logger.info(`[HTTP] ${req.method} ${req.path}`);
+      next();
+    });
+
     // Setup A2A routes (handles /.well-known/agent.json and POST /)
     const a2aApp = new A2AExpressApp(this.requestHandler);
     a2aApp.setupRoutes(app);
