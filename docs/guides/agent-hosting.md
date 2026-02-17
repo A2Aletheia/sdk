@@ -210,6 +210,84 @@ agent.handle(async (context, response) => {
 
 ---
 
+## Conversation Context Preservation
+
+For multi-turn conversations, the A2A protocol uses `contextId` to link related messages. This enables orchestrators to preserve conversation state across requests.
+
+### Automatic contextId Inclusion
+
+All `AgentResponse` methods automatically include `contextId` from the incoming request:
+
+```typescript
+agent.handle(async (context, response) => {
+  // context.contextId is the conversation identifier
+  // It's automatically included in the response
+  response.text("Your request has been processed");
+  // Response includes: { contextId: "...", taskId: "...", parts: [...] }
+});
+```
+
+This automatic inclusion enables orchestrators (like `@a2aletheia/a2a`) to:
+1. Track `contextId` from agent responses
+2. Forward the same `contextId` on follow-up requests
+3. Preserve conversation continuity across calls and restarts
+
+### Agent-Side State Preservation
+
+For stateful agents (chat assistants, multi-step workflows), use `contextId` to store conversation history:
+
+```typescript
+// In-memory conversation storage (use Redis/database for production)
+const conversations = new Map<string, Message[]>();
+
+agent.handle(async (context, response) => {
+  const sessionId = context.contextId ?? "default";
+  
+  // Retrieve existing conversation history
+  const history = conversations.get(sessionId) ?? [];
+  
+  // Process with history context
+  const reply = await processWithHistory(history, context.textContent);
+  
+  // Update stored history
+  history.push({ role: "user", content: context.textContent });
+  history.push({ role: "assistant", content: reply });
+  conversations.set(sessionId, history);
+  
+  // Response automatically includes contextId
+  response.text(reply);
+});
+```
+
+### Declaring Stateful Capability
+
+Set `stateTransitionHistory` to signal multi-turn conversation support:
+
+```typescript
+const agent = new AletheiaAgent({
+  // ...
+  capabilities: {
+    streaming: true,
+    stateTransitionHistory: true,  // Signals conversation continuity support
+  },
+});
+```
+
+This signals to callers that the agent maintains state across messages.
+
+### How Orchestrators Use This
+
+When orchestrators (like `@a2aletheia/a2a`) connect to your agent:
+
+1. **First call**: No `contextId` — agent receives fresh identifier
+2. **Response**: Agent returns `contextId` in response (automatic via SDK)
+3. **Subsequent calls**: Orchestrator forwards the same `contextId`
+4. **Agent**: Uses `contextId` to retrieve stored conversation state
+
+See the [Context Persistence guide](https://a2aletheia.github.io/a2a/guides/context-persistence) in `@a2aletheia/a2a` for orchestrator-side configuration.
+
+---
+
 ## Streaming Responses
 
 For long-running tasks, use streaming to keep clients informed:
