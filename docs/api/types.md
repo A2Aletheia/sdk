@@ -380,7 +380,8 @@ interface AgentManifest {
   // Aletheia-specific extensions
   aletheiaExtensions?: {
     did?: DID;
-    owner?: string;          // Ethereum address (0x...)
+    owner?: string;              // Ethereum address (0x...)
+    publicKeyMultibase?: string; // Ed25519 public key for did:web
     registryChain?: string;
     registryAddress?: string;
     livenessPingUrl?: string;

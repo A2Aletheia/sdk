@@ -253,12 +253,15 @@ Whether the response has been finalized. After calling a final method (`text`, `
 
 These methods send a response and immediately finalize the request.
 
+> **Note:** All response methods automatically include `contextId` and `taskId` from the request context. This enables orchestrators to preserve conversation state across multi-turn interactions.
+
 #### `text(content: string): void`
 
 Sends a text response and completes the request.
 
 ```typescript
 response.text("Hello, world!");
+// Response includes: { contextId: "...", taskId: "...", parts: [...] }
 ```
 
 ---
@@ -269,6 +272,7 @@ Sends a JSON data response and completes the request.
 
 ```typescript
 response.data({ status: "success", result: 42 });
+// Response includes: { contextId: "...", taskId: "...", parts: [...] }
 ```
 
 ---
@@ -282,6 +286,7 @@ response.message([
   { kind: "text", text: "Here's the analysis:" },
   { kind: "data", data: { score: 95 } },
 ]);
+// Response includes: { contextId: "...", taskId: "...", parts: [...] }
 ```
 
 ---
@@ -289,6 +294,8 @@ response.message([
 ### Streaming Methods
 
 These methods publish intermediate updates. Use `done()`, `fail()`, or `canceled()` to finalize.
+
+> **Note:** All streaming methods also automatically include `contextId` and `taskId`.
 
 #### `working(message?: string): void`
 
@@ -448,11 +455,28 @@ Aletheia-specific extensions for AgentCard metadata.
 
 ```typescript
 interface AletheiaExtensions {
-  owner?: string;           // Ethereum address of owner (for SIWE auth)
-  livenessPingUrl?: string; // URL for liveness health checks
-  did?: string;             // DID identifier (did:web or did:key)
+  owner?: string;              // Ethereum address of owner (for SIWE auth)
+  livenessPingUrl?: string;    // URL for liveness health checks
+  did?: string;                // DID identifier (did:web or did:key)
+  publicKeyMultibase?: string; // Public key in multibase format (for did:web)
 }
 ```
+
+**Fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `owner` | `string` | Ethereum address of the agent owner (for SIWE authentication) |
+| `livenessPingUrl` | `string` | URL for Aletheia liveness health checks |
+| `did` | `string` | DID identifier. Use `did:web:yourdomain.com` for production or leave unset for auto-generated `did:key` |
+| `publicKeyMultibase` | `string` | Ed25519 public key in multibase format (e.g., `z6Mk...`). Required for `did:web`, auto-derived for `did:key` |
+
+**DID Methods:**
+
+| Method | When to Use | `publicKeyMultibase` |
+|--------|-------------|---------------------|
+| `did:key` (auto) | Development, testing | Optional - auto-derived |
+| `did:web` | Production | Required - from `generateAgentKeyPair()` |
 
 ---
 
@@ -465,7 +489,34 @@ interface AgentContext extends RequestContext {
   readonly textContent: string;                        // All text parts joined with newlines
   readonly dataContent: Record<string, unknown> | null; // First data part's data
   readonly parts: Part[];                              // Raw message parts
+  // Inherited from RequestContext:
+  readonly contextId?: string;                         // Conversation identifier for multi-turn
+  readonly taskId: string;                             // Task identifier
 }
+```
+
+**Key Properties:**
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `textContent` | `string` | All text parts joined with newlines |
+| `dataContent` | `Record<string, unknown> \| null` | First data part's data |
+| `parts` | `Part[]` | Raw message parts |
+| `contextId` | `string \| undefined` | Conversation identifier — use for stateful agents |
+| `taskId` | `string` | Unique task identifier |
+
+**Usage for Stateful Agents:**
+
+```typescript
+agent.handle(async (context, response) => {
+  // Use contextId as session key for conversation history
+  const sessionId = context.contextId ?? "default";
+  const history = conversationStore.get(sessionId) ?? [];
+  
+  // Process with history...
+  
+  response.text("Response"); // Automatically includes contextId
+});
 ```
 
 ---
