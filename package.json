@@ -40,7 +40,7 @@
   "bugs": "https://github.com/A2Aletheia/sdk/issues",
   "repository": {
     "type": "git",
-    "url": "https://github.com/A2Aletheia/sdk"
+    "url": "git+https://github.com/A2Aletheia/sdk.git"
   },
   "dependencies": {
     "@a2a-js/sdk": "^0.2.5",
