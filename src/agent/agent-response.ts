@@ -3,6 +3,9 @@ import type {
   RequestContext,
 } from "@a2a-js/sdk/server";
 import type { Part, Artifact } from "@a2a-js/sdk";
+import type { FlowRequest } from "./flow-types.js";
+
+const FLOW_REQUEST_EXTENSION = "urn:a2a:flow-request:v1";
 
 /**
  * Response helper that wraps ExecutionEventBus with convenience methods.
@@ -181,7 +184,7 @@ export class AgentResponse {
     this._finish();
   }
 
-  /**
+/**
    * Publish an "input-required" status (non-final by default).
    */
   inputRequired(message: string): void {
@@ -201,6 +204,27 @@ export class AgentResponse {
       },
       final: false,
     });
+  }
+
+  /**
+   * Yield control to orchestrator for a flow (delegation, payment, etc).
+   * The orchestrator executes the flow and resumes with the result.
+   *
+   * The response includes contextId so the agent can restore state when resumed.
+   */
+  flow(request: FlowRequest): void {
+    this.eventBus.publish({
+      kind: "message",
+      role: "agent",
+      messageId: crypto.randomUUID(),
+      parts: [],
+      contextId: this.context?.contextId ?? "",
+      taskId: this.context?.taskId,
+      metadata: {
+        [FLOW_REQUEST_EXTENSION]: request,
+      },
+    });
+    this._finish();
   }
 
   // ---------------------------------------------------------------------------

@@ -98,7 +98,7 @@ const fetcher = new ManifestFetcher();
 
 ##### `fetch(baseUrl: string): Promise<AgentManifest>`
 
-Fetches an agent manifest from the standard `.well-known/agent.json` location.
+Fetches an agent manifest from the standard `.well-known/agent-card.json` location.
 
 **Parameters:**
 - `baseUrl` - The base URL of the agent (e.g., `https://agent.example.com`)
@@ -124,7 +124,7 @@ Fetches an agent manifest from an explicit URL (not necessarily `.well-known`).
 **Throws:** Error if fetch fails or manifest validation fails
 
 ```typescript
-const manifest = await fetcher.fetchFromUrl('https://cdn.example.com/agents/my-agent.json');
+const manifest = await fetcher.fetchFromUrl('https://cdn.example.com/agents/my-agent-card.json');
 ```
 
 ---

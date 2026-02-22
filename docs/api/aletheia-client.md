@@ -314,7 +314,7 @@ fetchManifest(baseUrl: string): Promise<AgentManifest>
 |-----------|------|-------------|
 | `baseUrl` | `string` | Agent's base URL |
 
-**Returns:** `Promise<AgentManifest>` - Fetches from `/.well-known/agent.json`
+**Returns:** `Promise<AgentManifest>` - Fetches from `/.well-known/agent-card.json`
 
 ```typescript
 const manifest = await client.fetchManifest("https://agent.example.com");
@@ -377,7 +377,7 @@ registerAgent(
 
 ```typescript
 const { agent, approval } = await client.registerAgent(
-  "https://my-agent.example.com/.well-known/agent.json",
+  "https://my-agent.example.com/.well-known/agent-card.json",
   "0x1234567890abcdef1234567890abcdef12345678"
 );
 

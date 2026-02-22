@@ -103,7 +103,7 @@ console.log(agent.did);         // DID identifier
 console.log(agent.url);         // Agent base URL
 console.log(agent.status);      // "active" | "inactive" | "suspended" | "pending"
 console.log(agent.trustScore);  // Numeric trust score
-console.log(agent.manifestUrl); // URL to agent.json manifest
+console.log(agent.manifestUrl); // URL to agent-card.json manifest
 ```
 
 ### Agent Manifest
@@ -111,12 +111,12 @@ console.log(agent.manifestUrl); // URL to agent.json manifest
 Fetch the A2A-compliant manifest (Agent Card) for detailed capability info:
 
 ```typescript
-// From a base URL (fetches /.well-known/agent.json)
+// From a base URL (fetches /.well-known/agent-card.json)
 const manifest = await aletheia.fetchManifest("https://my-agent.example.com");
 
 // Or from an explicit URL
 const manifest = await aletheia.fetchManifestFromUrl(
-  "https://cdn.example.com/agents/my-agent.json"
+  "https://cdn.example.com/agents/my-agent-card.json"
 );
 
 console.log(manifest.name);
@@ -153,7 +153,7 @@ Register your agent with the Aletheia registry to make it discoverable:
 aletheia.setAuthToken(sessionToken);
 
 const agent = await aletheia.registerAgent(
-  "https://my-agent.example.com/.well-known/agent.json",
+  "https://my-agent.example.com/.well-known/agent-card.json",
   "0x1234abcd..." // Optional: owner wallet address
 );
 
@@ -163,7 +163,7 @@ console.log(`Status: ${agent.status}`); // Usually "pending" initially
 
 ### Registration Requirements
 
-1. Your agent must serve an A2A-compliant manifest at `/.well-known/agent.json`
+1. Your agent must serve an A2A-compliant manifest at `/.well-known/agent-card.json`
 2. The manifest URL must be publicly accessible
 3. Authentication is required (see [Authentication guide](authentication))
 

@@ -78,7 +78,7 @@ aletheia.setAuthToken(sessionToken);
 
 // Now you can perform authenticated actions
 const agent = await aletheia.registerAgent(
-  "https://my-agent.example.com/.well-known/agent.json"
+  "https://my-agent.example.com/.well-known/agent-card.json"
 );
 ```
 
@@ -116,7 +116,7 @@ aletheia.setAuthToken(sessionToken);
 
 // 4. Perform authenticated actions
 const agent = await aletheia.registerAgent(
-  "https://my-agent.example.com/.well-known/agent.json",
+  "https://my-agent.example.com/.well-known/agent-card.json",
   account.address
 );
 

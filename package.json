@@ -1,6 +1,6 @@
 {
   "name": "@a2aletheia/sdk",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "description": "SDK for integrating with the Aletheia A2A Agent Discovery Registry",
   "type": "module",
   "main": "./dist/index.js",
@@ -43,7 +43,7 @@
     "url": "git+https://github.com/A2Aletheia/sdk.git"
   },
   "dependencies": {
-    "@a2a-js/sdk": "^0.2.5",
+    "@a2a-js/sdk": "^0.3.10",
     "@noble/ed25519": "^2.1.0",
     "@noble/hashes": "^2.0.1",
     "viem": "^2.21.0",

@@ -1,5 +1,5 @@
 export { DIDResolver } from "./did-resolver.js";
-export { ManifestFetcher } from "./manifest-fetcher.js";
+export { ManifestFetcher, AGENT_CARD_PATH } from "./manifest-fetcher.js";
 export {
   generateAgentKeyPair,
   signAgentMessage,

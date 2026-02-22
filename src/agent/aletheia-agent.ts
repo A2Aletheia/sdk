@@ -3,11 +3,14 @@ import {
   DefaultRequestHandler,
   InMemoryTaskStore,
   JsonRpcTransportHandler,
-  A2AExpressApp,
   type TaskStore,
   type A2ARequestHandler,
 } from "@a2a-js/sdk/server";
+import { A2AExpressApp } from "@a2a-js/sdk/server/express";
 import type { A2AResponse } from "@a2a-js/sdk";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { createRequire } from "node:module";
 import type {
   AletheiaLogger,
   AletheiaEventType,
@@ -21,6 +24,24 @@ import type {
 import { DelegatingAgentExecutor } from "./agent-executor.js";
 import { ConsoleLogger } from "../logger/console-logger.js";
 import { EventEmitter } from "../logger/event-emitter.js";
+
+const DEFAULT_PROTOCOL_VERSION = "0.3.10";
+const A2A_PROTOCOL_VERSION = resolveA2ASdkVersion();
+
+function resolveA2ASdkVersion(): string {
+  try {
+    const require = createRequire(import.meta.url);
+    const sdkEntryPath = require.resolve("@a2a-js/sdk");
+    const sdkPackageJsonPath = join(dirname(sdkEntryPath), "..", "package.json");
+    const sdkPackageJson = JSON.parse(
+      readFileSync(sdkPackageJsonPath, "utf8"),
+    ) as { version?: string };
+
+    return sdkPackageJson.version || DEFAULT_PROTOCOL_VERSION;
+  } catch {
+    return DEFAULT_PROTOCOL_VERSION;
+  }
+}
 
 /**
  * AletheiaAgent provides a high-level API for building A2A-compliant agents
@@ -173,7 +194,7 @@ export class AletheiaAgent {
       next();
     });
 
-    // Setup A2A routes (handles /.well-known/agent.json and POST /)
+    // Setup A2A routes (handles /.well-known/agent-card.json and POST /)
     const a2aApp = new A2AExpressApp(this.requestHandler);
     a2aApp.setupRoutes(app);
 
@@ -241,6 +262,7 @@ export class AletheiaAgent {
 
   private buildAgentCard(config: AletheiaAgentConfig): AgentCard {
     const card: AgentCard = {
+      protocolVersion: A2A_PROTOCOL_VERSION,
       name: config.name,
       version: config.version,
       url: config.url,
@@ -276,7 +298,7 @@ export class AletheiaAgent {
     }
 
     // Include Aletheia extensions directly on the card so they are served
-    // at /.well-known/agent.json — this lets the registry verify ownership.
+    // at /.well-known/agent-card.json — this lets the registry verify ownership.
     if (config.aletheiaExtensions) {
       const ext: Record<string, string> = {};
       if (config.aletheiaExtensions.did)
@@ -305,9 +327,10 @@ export class AletheiaAgent {
    * Build a minimal W3C DID Document for did:web self-hosting.
    */
   private buildDIDDocument(did: string) {
-    const publicKeyMultibase = this.config.aletheiaExtensions?.publicKeyMultibase;
+    const publicKeyMultibase =
+      this.config.aletheiaExtensions?.publicKeyMultibase;
     const verificationMethodId = `${did}#${publicKeyMultibase ?? "key-1"}`;
-    
+
     const doc: Record<string, unknown> = {
       "@context": [
         "https://www.w3.org/ns/did/v1",
@@ -323,7 +346,7 @@ export class AletheiaAgent {
         },
       ],
     };
-    
+
     if (publicKeyMultibase) {
       doc.verificationMethod = [
         {
@@ -336,7 +359,7 @@ export class AletheiaAgent {
       doc.authentication = [verificationMethodId];
       doc.assertionMethod = [verificationMethodId];
     }
-    
+
     return doc;
   }
 }

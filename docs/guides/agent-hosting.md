@@ -13,7 +13,7 @@ Learn how to build, configure, and deploy A2A-compliant agents using the `@a2ale
 
 `AletheiaAgent` is a high-level framework for hosting agents that:
 
-- Serve an A2A-compliant manifest at `/.well-known/agent.json`
+- Serve an A2A-compliant manifest at `/.well-known/agent-card.json`
 - Automatically generate and serve a DID Document at `/.well-known/did.json`
 - Expose a `/health` liveness endpoint
 - Handle incoming A2A messages with a simple handler API
@@ -50,7 +50,7 @@ agent.handle(async (context, response) => {
 
 await agent.start(4000);
 // Server running on port 4000
-// Manifest at: http://localhost:4000/.well-known/agent.json
+// Manifest at: http://localhost:4000/.well-known/agent-card.json
 // DID Doc at:  http://localhost:4000/.well-known/did.json
 // Health at:   http://localhost:4000/health
 ```
@@ -464,7 +464,7 @@ When `agent.start(port)` is called, these endpoints are automatically configured
 
 | Endpoint | Description |
 |----------|-------------|
-| `/.well-known/agent.json` | A2A-compliant agent manifest (Agent Card) |
+| `/.well-known/agent-card.json` | A2A-compliant agent manifest (Agent Card) |
 | `/.well-known/did.json` | DID Document for `did:web` resolution |
 | `/health` | Liveness check endpoint |
 | `POST /` | A2A message handler (main endpoint) |

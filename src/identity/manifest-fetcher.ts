@@ -1,11 +1,13 @@
 import { AgentManifestSchema, type AgentManifest } from "../types/index.js";
 
+export const AGENT_CARD_PATH = ".well-known/agent-card.json";
+
 export class ManifestFetcher {
   /**
-   * Fetch and validate an agent manifest from a .well-known/agent.json URL.
+   * Fetch and validate an agent manifest from a .well-known/agent-card.json URL.
    */
   async fetch(baseUrl: string): Promise<AgentManifest> {
-    const url = new URL("/.well-known/agent.json", baseUrl);
+    const url = new URL(`/${AGENT_CARD_PATH}`, baseUrl);
     const response = await fetch(url.toString());
 
     if (!response.ok) {

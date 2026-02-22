@@ -278,7 +278,7 @@ console.log("Verified response:", signedResponse.payload);
 The manifest (Agent Card) is the A2A-compliant description of an agent's capabilities:
 
 ```typescript
-// Fetches https://my-agent.example.com/.well-known/agent.json
+// Fetches https://my-agent.example.com/.well-known/agent-card.json
 const manifest = await aletheia.fetchManifest("https://my-agent.example.com");
 
 // Or from an arbitrary URL

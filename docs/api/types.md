@@ -216,7 +216,7 @@ interface Agent {
   name: string;
   description?: string;
   url: string;                 // Agent's base URL
-  manifestUrl: string;         // URL to agent.json manifest
+  manifestUrl: string;         // URL to agent-card.json manifest
   status: AgentStatus;
   trustScore: number | null;   // 0-100, null if unrated
   totalRatings: number;

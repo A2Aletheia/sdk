@@ -797,7 +797,7 @@ agent.handle(async (context, response) => {
 const app = new Hono();
 
 // Serve agent card
-app.get("/.well-known/agent.json", (c) => {
+app.get("/.well-known/agent-card.json", (c) => {
   return c.json(agent.getAgentCard());
 });
 

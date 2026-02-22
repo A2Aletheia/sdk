@@ -14,6 +14,9 @@ export type {
   RedisLike,
 } from "./redis-task-store.js";
 
+// Flow types
+export type { FlowType, FlowRequest } from "./flow-types.js";
+
 // Types
 export type {
   AletheiaAgentConfig,
