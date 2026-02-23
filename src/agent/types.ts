@@ -2,8 +2,6 @@ import type {
   AgentCapabilities,
   AgentSkill,
   Part,
-  TaskPushNotificationConfig,
-  PushNotificationConfig,
 } from "@a2a-js/sdk";
 import type {
   RequestContext,
