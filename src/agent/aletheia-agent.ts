@@ -6,7 +6,7 @@ import {
   type TaskStore,
   type A2ARequestHandler,
 } from "@a2a-js/sdk/server";
-import { A2AExpressApp } from "@a2a-js/sdk/server/express";
+import { A2AExpressApp, restHandler, jsonRpcHandler, agentCardHandler } from "@a2a-js/sdk/server/express";
 import type { A2AResponse } from "@a2a-js/sdk";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";

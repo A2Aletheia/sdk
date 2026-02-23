@@ -2,6 +2,8 @@ import type {
   AgentCapabilities,
   AgentSkill,
   Part,
+  TaskPushNotificationConfig,
+  PushNotificationConfig,
 } from "@a2a-js/sdk";
 import type {
   RequestContext,
@@ -113,6 +115,8 @@ export type {
   TaskStatus,
   TaskStatusUpdateEvent,
   TaskArtifactUpdateEvent,
+  TaskPushNotificationConfig,
+  PushNotificationConfig,
 } from "@a2a-js/sdk";
 
 export type {

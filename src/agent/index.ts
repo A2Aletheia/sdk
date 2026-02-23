@@ -39,6 +39,8 @@ export type {
   TaskStatus,
   TaskStatusUpdateEvent,
   TaskArtifactUpdateEvent,
+  TaskPushNotificationConfig,
+  PushNotificationConfig,
   ExecutionEventBus,
   TaskStore,
   AgentExecutionEvent,
