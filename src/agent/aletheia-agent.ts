@@ -15,6 +15,7 @@ import type {
   AletheiaLogger,
   AletheiaEventType,
   AletheiaEventHandler,
+  DIDDocument,
 } from "../types/index.js";
 import type {
   AletheiaAgentConfig,
@@ -32,7 +33,11 @@ function resolveA2ASdkVersion(): string {
   try {
     const require = createRequire(import.meta.url);
     const sdkEntryPath = require.resolve("@a2a-js/sdk");
-    const sdkPackageJsonPath = join(dirname(sdkEntryPath), "..", "package.json");
+    const sdkPackageJsonPath = join(
+      dirname(sdkEntryPath),
+      "..",
+      "package.json",
+    );
     const sdkPackageJson = JSON.parse(
       readFileSync(sdkPackageJsonPath, "utf8"),
     ) as { version?: string };
@@ -326,12 +331,12 @@ export class AletheiaAgent {
   /**
    * Build a minimal W3C DID Document for did:web self-hosting.
    */
-  private buildDIDDocument(did: string) {
+  public buildDIDDocument(did: string): DIDDocument {
     const publicKeyMultibase =
       this.config.aletheiaExtensions?.publicKeyMultibase;
     const verificationMethodId = `${did}#${publicKeyMultibase ?? "key-1"}`;
 
-    const doc: Record<string, unknown> = {
+    const doc: DIDDocument = {
       "@context": [
         "https://www.w3.org/ns/did/v1",
         "https://w3id.org/security/multikey/v1",
