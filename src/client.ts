@@ -167,10 +167,19 @@ export class AletheiaClient {
   async discoverAgents(params: {
     capability?: string;
     query?: string;
+    queryEmbedding?: number[];
     minTrustScore?: number;
     isLive?: boolean;
     limit?: number;
   }): Promise<PaginatedResponse<Agent>> {
+    // Use POST when queryEmbedding is provided (too large for query string)
+    if (params.queryEmbedding) {
+      return this.http.post<PaginatedResponse<Agent>>(
+        "/api/discover",
+        params,
+      );
+    }
+
     const searchParams: Record<string, string> = {};
     for (const [key, value] of Object.entries(params)) {
       if (value !== undefined) {
