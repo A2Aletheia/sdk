@@ -15,7 +15,14 @@ export type {
 } from "./redis-task-store.js";
 
 // Flow types
-export type { FlowType, FlowRequest } from "./flow-types.js";
+export type {
+  FlowType,
+  FlowRequest,
+  DelegationFlowRequest,
+  PaymentFlowRequest,
+  ConfirmationFlowRequest,
+  OAuthFlowRequest,
+} from "./flow-types.js";
 
 // Types
 export type {
