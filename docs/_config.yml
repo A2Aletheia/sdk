@@ -1,9 +1,10 @@
+remote_theme: just-the-docs/just-the-docs
+
 title: "@a2aletheia/sdk Documentation"
 description: "SDK for integrating with the Aletheia A2A Agent Discovery Registry"
+
 baseurl: "/sdk"
 url: "https://a2aletheia.github.io"
-
-remote_theme: just-the-docs/just-the-docs
 
 plugins:
   - jekyll-remote-theme
@@ -14,7 +15,6 @@ kramdown:
   syntax_highlighter: rouge
 
 search_enabled: true
-
 nav_enabled: true
 
 collections:
@@ -36,6 +36,12 @@ defaults:
       type: "api"
     values:
       layout: "default"
+
+aux_links:
+  "GitHub": "https://github.com/A2Aletheia/sdk"
+  "npm": "https://www.npmjs.com/package/@a2aletheia/sdk"
+
+aux_links_new_tab: true
 
 exclude:
   - Gemfile

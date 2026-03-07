@@ -1,4 +1,4 @@
-import type { AgentCard } from "@a2a-js/sdk";
+import type { AgentCard, A2AResponse, Message, Part, Task } from "@a2a-js/sdk";
 import {
   DefaultRequestHandler,
   InMemoryTaskStore,
@@ -7,7 +7,6 @@ import {
   type A2ARequestHandler,
 } from "@a2a-js/sdk/server";
 import { A2AExpressApp } from "@a2a-js/sdk/server/express";
-import type { A2AResponse } from "@a2a-js/sdk";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { createRequire } from "node:module";
@@ -15,6 +14,7 @@ import type {
   AletheiaLogger,
   AletheiaEventType,
   AletheiaEventHandler,
+  DIDDocument,
 } from "../types/index.js";
 import type {
   AletheiaAgentConfig,
@@ -27,12 +27,37 @@ import { EventEmitter } from "../logger/event-emitter.js";
 
 const DEFAULT_PROTOCOL_VERSION = "0.3.10";
 const A2A_PROTOCOL_VERSION = resolveA2ASdkVersion();
+const FLOW_REQUEST_EXTENSION = "urn:a2a:flow-request:v1";
+
+interface JsonRpcRequestShape {
+  method?: unknown;
+  params?: unknown;
+}
+
+interface BlockingSendRequest {
+  message: IncomingMessageShape;
+}
+
+interface IncomingMessageShape {
+  messageId: string;
+  role: "agent" | "user";
+  parts: Part[];
+  metadata?: Record<string, unknown>;
+  referenceTaskIds?: string[];
+  extensions?: string[];
+  taskId?: string;
+  contextId?: string;
+}
 
 function resolveA2ASdkVersion(): string {
   try {
     const require = createRequire(import.meta.url);
     const sdkEntryPath = require.resolve("@a2a-js/sdk");
-    const sdkPackageJsonPath = join(dirname(sdkEntryPath), "..", "package.json");
+    const sdkPackageJsonPath = join(
+      dirname(sdkEntryPath),
+      "..",
+      "package.json",
+    );
     const sdkPackageJson = JSON.parse(
       readFileSync(sdkPackageJsonPath, "utf8"),
     ) as { version?: string };
@@ -170,7 +195,20 @@ export class AletheiaAgent {
   async handleRequest(
     body: unknown,
   ): Promise<A2AResponse | AsyncGenerator<A2AResponse, void, undefined>> {
-    return this.jsonRpcHandler.handle(body);
+    const blockingSendRequest = this.getBlockingSendRequest(body);
+    const response = await this.jsonRpcHandler.handle(body);
+
+    if (blockingSendRequest && !this.isAsyncIterableResponse(response)) {
+      const finalMessage = this.getMessageResult(response);
+      if (finalMessage) {
+        await this.persistBlockingMessageResult(
+          blockingSendRequest.message,
+          finalMessage,
+        );
+      }
+    }
+
+    return response;
   }
 
   // ---------------------------------------------------------------------------
@@ -316,6 +354,175 @@ export class AletheiaAgent {
     return card;
   }
 
+  private getBlockingSendRequest(body: unknown): BlockingSendRequest | null {
+    const request = this.parseJsonRpcRequest(body);
+    if (!request || request.method !== "message/send") return null;
+
+    const params = this.asRecord(request.params);
+    if (!params) return null;
+
+    const configuration = this.asRecord(params.configuration);
+    if (configuration?.blocking === false) return null;
+
+    const message = this.parseIncomingMessage(params.message);
+    if (!message) return null;
+
+    return { message };
+  }
+
+  private parseJsonRpcRequest(body: unknown): JsonRpcRequestShape | null {
+    if (typeof body === "string") {
+      try {
+        const parsed = JSON.parse(body) as unknown;
+        return this.asRecord(parsed) as JsonRpcRequestShape | null;
+      } catch {
+        return null;
+      }
+    }
+
+    return this.asRecord(body) as JsonRpcRequestShape | null;
+  }
+
+  private asRecord(value: unknown): Record<string, unknown> | null {
+    return typeof value === "object" && value !== null
+      ? (value as Record<string, unknown>)
+      : null;
+  }
+
+  private isAsyncIterableResponse(
+    value: A2AResponse | AsyncGenerator<A2AResponse, void, undefined>,
+  ): value is AsyncGenerator<A2AResponse, void, undefined> {
+    return Symbol.asyncIterator in Object(value);
+  }
+
+  private parseIncomingMessage(value: unknown): IncomingMessageShape | null {
+    const message = this.asRecord(value);
+    if (!message) return null;
+
+    if (
+      typeof message.messageId !== "string" ||
+      (message.role !== "agent" && message.role !== "user") ||
+      !Array.isArray(message.parts)
+    ) {
+      return null;
+    }
+
+    const incomingMessage: IncomingMessageShape = {
+      messageId: message.messageId,
+      role: message.role,
+      parts: message.parts as Part[],
+    };
+
+    if (this.asRecord(message.metadata)) {
+      incomingMessage.metadata = message.metadata as Record<string, unknown>;
+    }
+    if (Array.isArray(message.referenceTaskIds)) {
+      incomingMessage.referenceTaskIds = message.referenceTaskIds as string[];
+    }
+    if (Array.isArray(message.extensions)) {
+      incomingMessage.extensions = message.extensions as string[];
+    }
+    if (typeof message.taskId === "string") {
+      incomingMessage.taskId = message.taskId;
+    }
+    if (typeof message.contextId === "string") {
+      incomingMessage.contextId = message.contextId;
+    }
+
+    return incomingMessage;
+  }
+
+  private getMessageResult(response: A2AResponse): Message | null {
+    const payload = this.asRecord(response);
+    if (!payload || "error" in payload) return null;
+
+    const result = this.asRecord(payload.result);
+    if (!result || result.kind !== "message" || typeof result.messageId !== "string") {
+      return null;
+    }
+
+    return payload.result as Message;
+  }
+
+  private async persistBlockingMessageResult(
+    incomingMessage: IncomingMessageShape,
+    finalMessage: Message,
+  ): Promise<void> {
+    if (!finalMessage.taskId || !finalMessage.contextId) return;
+
+    const taskId = finalMessage.taskId;
+    const contextId = finalMessage.contextId;
+    const existingTask = await this.taskStore.load(taskId);
+    const userMessage = this.materializeUserMessage(
+      incomingMessage,
+      taskId,
+      contextId,
+    );
+    const history = existingTask?.history ? [...existingTask.history] : [];
+
+    this.pushHistoryMessage(history, userMessage);
+    this.pushHistoryMessage(history, finalMessage);
+
+    const task: Task = existingTask ?? {
+      kind: "task",
+      id: taskId,
+      contextId,
+      history,
+      status: {
+        state: "working",
+        timestamp: new Date().toISOString(),
+      },
+    };
+
+    task.contextId = contextId;
+    task.history = history;
+    task.status = {
+      state: this.getTaskStateForMessage(finalMessage),
+      message: finalMessage,
+      timestamp: new Date().toISOString(),
+    };
+
+    await this.taskStore.save(task);
+  }
+
+  private materializeUserMessage(
+    incomingMessage: IncomingMessageShape,
+    taskId: string,
+    contextId: string,
+  ): Message {
+    return {
+      kind: "message",
+      role: incomingMessage.role,
+      messageId: incomingMessage.messageId,
+      parts: incomingMessage.parts,
+      taskId,
+      contextId,
+      ...(incomingMessage.metadata ? { metadata: incomingMessage.metadata } : {}),
+      ...(incomingMessage.referenceTaskIds
+        ? { referenceTaskIds: incomingMessage.referenceTaskIds }
+        : {}),
+      ...(incomingMessage.extensions
+        ? { extensions: incomingMessage.extensions }
+        : {}),
+    };
+  }
+
+  private pushHistoryMessage(history: Message[], message: Message): void {
+    if (!history.find((entry) => entry.messageId === message.messageId)) {
+      history.push(message);
+    }
+  }
+
+  private getTaskStateForMessage(finalMessage: Message): "working" | "input-required" {
+    return finalMessage.metadata &&
+      Object.prototype.hasOwnProperty.call(
+        finalMessage.metadata,
+        FLOW_REQUEST_EXTENSION,
+      )
+      ? "input-required"
+      : "working";
+  }
+
   /**
    * Get Aletheia-specific extensions.
    */
@@ -326,12 +533,12 @@ export class AletheiaAgent {
   /**
    * Build a minimal W3C DID Document for did:web self-hosting.
    */
-  private buildDIDDocument(did: string) {
+  public buildDIDDocument(did: string): DIDDocument {
     const publicKeyMultibase =
       this.config.aletheiaExtensions?.publicKeyMultibase;
     const verificationMethodId = `${did}#${publicKeyMultibase ?? "key-1"}`;
 
-    const doc: Record<string, unknown> = {
+    const doc: DIDDocument = {
       "@context": [
         "https://www.w3.org/ns/did/v1",
         "https://w3id.org/security/multikey/v1",

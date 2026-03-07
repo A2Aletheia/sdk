@@ -2,7 +2,7 @@ import type {
   ExecutionEventBus,
   RequestContext,
 } from "@a2a-js/sdk/server";
-import type { Part, Artifact } from "@a2a-js/sdk";
+import type { Part, Artifact, Message, TaskState } from "@a2a-js/sdk";
 import type { FlowRequest } from "./flow-types.js";
 
 const FLOW_REQUEST_EXTENSION = "urn:a2a:flow-request:v1";
@@ -34,14 +34,9 @@ export class AgentResponse {
    * Send a text response and complete the request.
    */
   text(content: string): void {
-    this.eventBus.publish({
-      kind: "message",
-      role: "agent",
-      messageId: crypto.randomUUID(),
-      parts: [{ kind: "text", text: content }],
-      contextId: this.context?.contextId ?? "",
-      taskId: this.context?.taskId,
-    });
+    this.eventBus.publish(
+      this._createMessage([{ kind: "text", text: content }]),
+    );
     this._finish();
   }
 
@@ -49,14 +44,7 @@ export class AgentResponse {
    * Send a data response and complete the request.
    */
   data(data: Record<string, unknown>): void {
-    this.eventBus.publish({
-      kind: "message",
-      role: "agent",
-      messageId: crypto.randomUUID(),
-      parts: [{ kind: "data", data }],
-      contextId: this.context?.contextId ?? "",
-      taskId: this.context?.taskId,
-    });
+    this.eventBus.publish(this._createMessage([{ kind: "data", data }]));
     this._finish();
   }
 
@@ -64,14 +52,7 @@ export class AgentResponse {
    * Send a message with custom parts and complete the request.
    */
   message(parts: Part[]): void {
-    this.eventBus.publish({
-      kind: "message",
-      role: "agent",
-      messageId: crypto.randomUUID(),
-      parts,
-      contextId: this.context?.contextId ?? "",
-      taskId: this.context?.taskId,
-    });
+    this.eventBus.publish(this._createMessage(parts));
     this._finish();
   }
 
@@ -213,17 +194,11 @@ export class AgentResponse {
    * The response includes contextId so the agent can restore state when resumed.
    */
   flow(request: FlowRequest): void {
-    this.eventBus.publish({
-      kind: "message",
-      role: "agent",
-      messageId: crypto.randomUUID(),
-      parts: [],
-      contextId: this.context?.contextId ?? "",
-      taskId: this.context?.taskId,
-      metadata: {
+    this.eventBus.publish(
+      this._createMessage([], {
         [FLOW_REQUEST_EXTENSION]: request,
-      },
-    });
+      }),
+    );
     this._finish();
   }
 
@@ -236,7 +211,7 @@ export class AgentResponse {
    * Called once before the first status-update/artifact-update so the
    * ResultManager can match subsequent events by taskId.
    */
-  private _seedTask(): void {
+  private _seedTask(state: Extract<TaskState, "working" | "input-required"> = "working"): void {
     if (this._taskSeeded || !this.context) return;
     this._taskSeeded = true;
 
@@ -245,10 +220,25 @@ export class AgentResponse {
       id: this.context.taskId,
       contextId: this.context.contextId,
       status: {
-        state: "working",
+        state,
         timestamp: new Date().toISOString(),
       },
     });
+  }
+
+  private _createMessage(
+    parts: Part[],
+    metadata?: Record<string, unknown>,
+  ): Message {
+    return {
+      kind: "message",
+      role: "agent",
+      messageId: crypto.randomUUID(),
+      parts,
+      contextId: this.context?.contextId ?? "",
+      taskId: this.context?.taskId,
+      ...(metadata ? { metadata } : {}),
+    };
   }
 
   private _finish(): void {
