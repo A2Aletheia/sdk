@@ -168,6 +168,7 @@ export class AletheiaClient {
     capability?: string;
     query?: string;
     queryEmbedding?: number[];
+    url?: string;
     minTrustScore?: number;
     isLive?: boolean;
     limit?: number;
