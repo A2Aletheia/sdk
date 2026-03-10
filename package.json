@@ -1,6 +1,6 @@
 {
   "name": "@a2aletheia/sdk",
-  "version": "0.2.8",
+  "version": "0.2.9",
   "description": "SDK for integrating with the Aletheia A2A Agent Discovery Registry",
   "type": "module",
   "main": "./dist/index.js",
