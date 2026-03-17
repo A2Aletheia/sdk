@@ -3,11 +3,13 @@ import type {
   AgentManifest,
   AgentSearchParams,
   AuditReport,
+  BatchRegistrationApproval,
   CreateRatingInput,
   DID,
   DIDDocument,
   PaginatedResponse,
   PoWChallenge,
+  RegistrationBatch,
   Rating,
   TrustScore,
 } from "./types/index.js";
@@ -102,6 +104,40 @@ export class AletheiaClient {
       manifestUrl,
       ownerAddress,
     });
+  }
+
+  async createRegistrationBatch(
+    manifestUrls: string[],
+  ): Promise<{ batchId: string }> {
+    return this.http.post<{ batchId: string }>(
+      "/api/agents/register/batches",
+      { manifestUrls },
+    );
+  }
+
+  async getRegistrationBatch(batchId: string): Promise<RegistrationBatch> {
+    return this.http.get<RegistrationBatch>(
+      `/api/agents/register/batches/${encodeURIComponent(batchId)}`,
+    );
+  }
+
+  async getRegistrationBatchApproval(
+    batchId: string,
+  ): Promise<BatchRegistrationApproval> {
+    return this.http.post<BatchRegistrationApproval>(
+      `/api/agents/register/batches/${encodeURIComponent(batchId)}/approval`,
+      {},
+    );
+  }
+
+  async confirmRegistrationBatch(
+    batchId: string,
+    txHash: string,
+  ): Promise<RegistrationBatch> {
+    return this.http.post<RegistrationBatch>(
+      `/api/agents/register/batches/${encodeURIComponent(batchId)}/confirm`,
+      { txHash },
+    );
   }
 
   async getAgent(did: DID): Promise<Agent> {
