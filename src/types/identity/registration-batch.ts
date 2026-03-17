@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { AgentStatusSchema } from "./agent.js";
 import { DIDSchema } from "./did.js";
+import { RegistrationModeSchema } from "./registration-mode.js";
 
 export const RegistrationBatchStatusSchema = z.enum([
   "queued",
@@ -53,6 +54,7 @@ export type RegistrationBatchCounts = z.infer<
 export const RegistrationBatchSchema = z.object({
   id: z.string().uuid(),
   ownerAddress: z.string(),
+  registrationMode: RegistrationModeSchema,
   status: RegistrationBatchStatusSchema,
   txHash: z.string().nullable(),
   completedAt: z.coerce.date().nullable(),
