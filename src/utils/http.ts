@@ -18,21 +18,6 @@ export class HttpClient {
     return headers;
   }
 
-  private async throwForError(response: Response): Promise<never> {
-    let message = `HTTP ${response.status}: ${response.statusText}`;
-
-    try {
-      const payload = (await response.json()) as { message?: string };
-      if (payload?.message) {
-        message = payload.message;
-      }
-    } catch {
-      // Ignore invalid/non-JSON error bodies and fall back to status text.
-    }
-
-    throw new Error(message);
-  }
-
   async get<T>(path: string, params?: Record<string, string>): Promise<T> {
     const url = new URL(path, this.baseUrl);
     if (params) {
@@ -44,7 +29,7 @@ export class HttpClient {
       headers: this.getHeaders(),
     });
     if (!response.ok) {
-      await this.throwForError(response);
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
     return response.json() as Promise<T>;
   }
@@ -57,7 +42,7 @@ export class HttpClient {
       body: JSON.stringify(body),
     });
     if (!response.ok) {
-      await this.throwForError(response);
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
     return response.json() as Promise<T>;
   }
@@ -70,7 +55,7 @@ export class HttpClient {
       body: JSON.stringify(body),
     });
     if (!response.ok) {
-      await this.throwForError(response);
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
     return response.json() as Promise<T>;
   }

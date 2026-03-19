@@ -1,6 +1,5 @@
 import { z } from "zod";
 import { DIDSchema } from "./did.js";
-import { RegistrationModeSchema } from "./registration-mode.js";
 
 export const AgentStatusSchema = z.enum([
   "active",
@@ -17,7 +16,6 @@ export const AgentSchema = z.object({
   description: z.string().optional(),
   url: z.string().url(),
   manifestUrl: z.string().url(),
-  registrationMode: RegistrationModeSchema,
   status: AgentStatusSchema,
   trustScore: z.number().min(0).max(100).nullable(),
   totalRatings: z.number().int().nonnegative(),

@@ -3,14 +3,11 @@ import type {
   AgentManifest,
   AgentSearchParams,
   AuditReport,
-  BatchRegistrationApproval,
   CreateRatingInput,
   DID,
   DIDDocument,
   PaginatedResponse,
   PoWChallenge,
-  RegistrationMode,
-  RegistrationBatch,
   Rating,
   TrustScore,
 } from "./types/index.js";
@@ -80,7 +77,6 @@ export class AletheiaClient {
   async registerAgent(
     manifestUrl: string,
     ownerAddress?: string,
-    registrationMode: RegistrationMode = "onchain",
   ): Promise<{
     agent: Agent;
     approval: {
@@ -105,43 +101,7 @@ export class AletheiaClient {
     }>("/api/agents/register", {
       manifestUrl,
       ownerAddress,
-      registrationMode,
     });
-  }
-
-  async createRegistrationBatch(
-    manifestUrls: string[],
-    registrationMode: RegistrationMode = "onchain",
-  ): Promise<{ batchId: string }> {
-    return this.http.post<{ batchId: string }>(
-      "/api/agents/register/batches",
-      { manifestUrls, registrationMode },
-    );
-  }
-
-  async getRegistrationBatch(batchId: string): Promise<RegistrationBatch> {
-    return this.http.get<RegistrationBatch>(
-      `/api/agents/register/batches/${encodeURIComponent(batchId)}`,
-    );
-  }
-
-  async getRegistrationBatchApproval(
-    batchId: string,
-  ): Promise<BatchRegistrationApproval> {
-    return this.http.post<BatchRegistrationApproval>(
-      `/api/agents/register/batches/${encodeURIComponent(batchId)}/approval`,
-      {},
-    );
-  }
-
-  async confirmRegistrationBatch(
-    batchId: string,
-    txHash: string,
-  ): Promise<RegistrationBatch> {
-    return this.http.post<RegistrationBatch>(
-      `/api/agents/register/batches/${encodeURIComponent(batchId)}/confirm`,
-      { txHash },
-    );
   }
 
   async getAgent(did: DID): Promise<Agent> {
@@ -166,20 +126,6 @@ export class AletheiaClient {
       {},
     );
     return result.isLive;
-  }
-
-  async resyncAgent(did: DID): Promise<Agent> {
-    return this.http.post<Agent>(
-      `/api/agents/${encodeURIComponent(did)}/resync`,
-      {},
-    );
-  }
-
-  async deactivateAgent(did: DID): Promise<Agent> {
-    return this.http.post<Agent>(
-      `/api/agents/${encodeURIComponent(did)}/deactivate`,
-      {},
-    );
   }
 
   /**
