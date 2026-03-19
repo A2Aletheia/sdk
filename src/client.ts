@@ -9,6 +9,7 @@ import type {
   DIDDocument,
   PaginatedResponse,
   PoWChallenge,
+  RegistrationMode,
   RegistrationBatch,
   Rating,
   TrustScore,
@@ -79,6 +80,7 @@ export class AletheiaClient {
   async registerAgent(
     manifestUrl: string,
     ownerAddress?: string,
+    registrationMode: RegistrationMode = "onchain",
   ): Promise<{
     agent: Agent;
     approval: {
@@ -103,15 +105,17 @@ export class AletheiaClient {
     }>("/api/agents/register", {
       manifestUrl,
       ownerAddress,
+      registrationMode,
     });
   }
 
   async createRegistrationBatch(
     manifestUrls: string[],
+    registrationMode: RegistrationMode = "onchain",
   ): Promise<{ batchId: string }> {
     return this.http.post<{ batchId: string }>(
       "/api/agents/register/batches",
-      { manifestUrls },
+      { manifestUrls, registrationMode },
     );
   }
 
@@ -162,6 +166,20 @@ export class AletheiaClient {
       {},
     );
     return result.isLive;
+  }
+
+  async resyncAgent(did: DID): Promise<Agent> {
+    return this.http.post<Agent>(
+      `/api/agents/${encodeURIComponent(did)}/resync`,
+      {},
+    );
+  }
+
+  async deactivateAgent(did: DID): Promise<Agent> {
+    return this.http.post<Agent>(
+      `/api/agents/${encodeURIComponent(did)}/deactivate`,
+      {},
+    );
   }
 
   /**
