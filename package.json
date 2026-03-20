@@ -20,11 +20,11 @@
     "README.md"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "rimraf dist tsconfig.tsbuildinfo && tsc -b --force",
     "check-types": "tsc --noEmit",
     "lint": "eslint .",
     "test": "vitest run",
-    "clean": "rimraf dist"
+    "clean": "rimraf dist tempdist tsconfig.tsbuildinfo"
   },
   "keywords": [
     "a2a",
